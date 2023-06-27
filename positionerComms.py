@@ -27,13 +27,13 @@ _vel = 4.9
 
 def _dumb_transmit(sock, command):
     sock.sendall(command.encode('ascii'))
-    #print(f'Sent: {command}')
+    print(f'Sent: {command}')
     sleep(.1)#assumes the controller recieved it and has responded by now
     return sock.recv(1024).decode('ascii')
 
 def _transmit(sock, command):
     sock.sendall(command.encode('ascii'))
-    #print(f'Sent: {command}'.replace('\r\n', ''))
+    print(f'Sent: {command}'.replace('\r\n', ''))
     full_response = ''
     while True: # waits for a response from the controller before continuing
         sleep(.01)
@@ -42,7 +42,7 @@ def _transmit(sock, command):
         full_response += response
         if 'P00>' in full_response or 'SYS>' in full_response:
             break
-    #print('Received:', response)
+    print('Received:', response)
     return response
 
 
@@ -280,17 +280,14 @@ def program_moves():
     accel, decel, stp, vel = get_motion_parameters()
     last_el = get_elevation()
     last_az = get_azimuth()
-
+    send_ascii_command('prog0 clear')
     send_ascii_command('NEW PROGRAM')
     try:
         send_ascii_command(f'ACC {accel} DEC {decel} STP 0 VEL {vel}') # a stop acceleration of 0 means the move doesn't stop at the end if there's another move in the buffer 
         send_ascii_command('DIM MBUF (20)')
         send_ascii_command('MBUF ON')
-        send_ascii_command('LOOK ON')
-        send_ascii_command('LOOK MODE 1')
-        send_ascii_command(f'jog acc x{accel} y{accel} z{accel} a{accel}')
-        send_ascii_command(f'jog dec x{decel} y{decel} z{decel} a{decel}')
-        send_ascii_command(f'jog vel x{vel} y{vel} z{vel} a{vel}')
+        #send_ascii_command('LOOK ON')
+        #send_ascii_command('LOOK MODE 1')
 
         for i, move in enumerate(_move_queue):
             send_ascii_command(f'{_motors[0]}{move[0]} {_motors[1]}{move[1]}')
@@ -449,8 +446,8 @@ def run_moves():
 startup()
 switch_to_el_az()
 
-for i in range(360):
-    add_move((20 * sin(i / 360 * 2 * pi), -20 * cos(i / 360 * 2 * pi)))
+for i in range(3600):
+    add_move((60 * sin(i / 3600 * 2 * pi), -60 * cos(i / 3600 * 2 * pi)))
 print(_move_queue)
 program_moves()
 input()

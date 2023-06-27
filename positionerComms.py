@@ -365,11 +365,11 @@ def run_moves():
         d_vec = (next_vec[0] - vec[0], next_vec[1] - vec[1])
         criterion = max(abs(d_vec[0]), abs(d_vec[1])) > .1
         if (criterion and (abs(d_vec[0]) > abs(d_vec[1]))) or (abs(vec[0]) > abs(vec[1]) and not criterion):#wanted to use d_vec only but that was running into a vanishing gradient type situation when coming out of 90 degree turns
-            while ((el := get_elevation()) > sign(move[0]) * (abs(move[0]) - abs(d_vec[0]/2/accel)) if vec[0] < 0 else (el := get_elevation()) < sign(move[0]) * (abs(move[0]) - abs(d_vec[0]/2/accel))):
-                print(f'Waiting until {round(sign(move[0]) * (abs(move[0]) - abs(d_vec[0]/2/accel)), 2)}el at {el} at {datetime.datetime.now().second} secs at {i}')
+            while ((el := get_elevation()) > ((move[0]) - (d_vec[0]/2/accel)) if vec[0] < 0 else (el := get_elevation()) < ((move[0]) - (d_vec[0]/2/accel))):
+                print(f'Waiting until {round(((move[0]) - (d_vec[0]/2/accel)), 2)}el at {el} at {datetime.datetime.now().second} secs at {i}')
         else:
-            while ((az := get_azimuth()) > sign(move[1]) * (abs(move[1]) - abs(d_vec[1]/2/accel)) if vec[1] < 0 else (az := get_azimuth()) < sign(move[1]) * (abs(move[1]) - abs(d_vec[1]/2/accel))):
-                print(f'Waiting until {round(sign(move[1]) * (abs(move[1]) - abs(d_vec[1]/2/accel)), 2)}az at {az} at {datetime.datetime.now().second} secs at {i}')
+            while ((az := get_azimuth()) > ((move[1]) - (d_vec[1]/2/accel)) if vec[1] < 0 else (az := get_azimuth()) < ((move[1]) - (d_vec[1]/2/accel))):
+                print(f'Waiting until {round(((move[1]) - (d_vec[1]/2/accel)), 2)}az at {az} at {datetime.datetime.now().second} secs at {i}')
 
     send_ascii_command(f'jog off {_motors[0]} {_motors[1]}')
     print((get_elevation(), get_azimuth()))

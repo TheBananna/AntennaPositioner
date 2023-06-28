@@ -12,6 +12,9 @@
 #halt immediately stops all movement
 #reboot restarts the controller and calls startup in case something has gone wrong and a good state needs to be restored
 #switch_to_el_az and switch_to_az_el switch the current target of the movement commands to those motors, this doesn't effect startup
+#add_moves and add_move are to add moves to the internal move queue used for programming continuous piecewise motion into the controller, the format of the moves is (x, y)
+#program_moves programs _move_queue into the controller and then clears _move_queue, this overwrites previously programmed moves and is lost upong reboot or power loss
+#run_moves executes previously programmed moves 
 
 
 import socket
@@ -444,14 +447,8 @@ def run_moves():
 #     return max(abs(get_elevation() / _vel), abs(get_azimuth() / _vel))
 
 startup()
-switch_to_el_az()
-set_motion_parameters(20, 20, 10, 10)
-for i in range(3600):
-    add_move((60 * sin(i / 3600 * 2 * pi), -60 * cos(i / 3600 * 2 * pi)))
-print(_move_queue)
-program_moves()
-input()
-
-run_moves()
+for i in range(50):
+    set_el_az(20, 20)
+    set_el_az(0, 0)
 
 #need to account for get_elevation/azimuth returning degrees not counts and that the ratios are for 360 degrees

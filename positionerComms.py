@@ -448,9 +448,4 @@ def run_moves():
 #     return max(abs(get_elevation() / _vel), abs(get_azimuth() / _vel))
 
 startup()
-for i in range(50):
-    set_el_az(5, 5)
-    set_el_az(0, 0)
-    print(f'i is {i}')
 
-#need to account for get_elevation/azimuth returning degrees not counts and that the ratios are for 360 degrees

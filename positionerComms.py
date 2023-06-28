@@ -139,6 +139,8 @@ def startup():
     switch_to_az_el()
     send_ascii_command('started=1')
     reset()
+    send_ascii_command('DIM MBUF (20)')
+    send_ascii_command('MBUF ON')
 
 
 def reset():
@@ -284,8 +286,6 @@ def program_moves():
     send_ascii_command('NEW PROGRAM')
     try:
         send_ascii_command(f'ACC {accel} DEC {decel} STP 0 VEL {vel}') # a stop acceleration of 0 means the move doesn't stop at the end if there's another move in the buffer 
-        send_ascii_command('DIM MBUF (20)')
-        send_ascii_command('MBUF ON')
         #send_ascii_command('LOOK ON')
         #send_ascii_command('LOOK MODE 1')
 
@@ -445,7 +445,7 @@ def run_moves():
 
 startup()
 switch_to_el_az()
-
+set_motion_parameters(20, 20, 10, 10)
 for i in range(3600):
     add_move((60 * sin(i / 3600 * 2 * pi), -60 * cos(i / 3600 * 2 * pi)))
 print(_move_queue)

@@ -289,8 +289,8 @@ def program_moves():
     send_ascii_command('NEW PROGRAM')
     try:
         send_ascii_command(f'ACC {accel} DEC {decel} STP 0 VEL {vel}') # a stop acceleration of 0 means the move doesn't stop at the end if there's another move in the buffer 
-        #send_ascii_command('LOOK ON')
-        #send_ascii_command('LOOK MODE 1')
+        send_ascii_command('LOOK ON')
+        send_ascii_command('LOOK MODE 1')
 
         for i, move in enumerate(_move_queue):
             send_ascii_command(f'{_motors[0]}{move[0]} {_motors[1]}{move[1]}')
@@ -299,6 +299,7 @@ def program_moves():
         raise e
     _move_queue = []
     send_ascii_command(f'ACC {accel} DEC {decel} STP {stp} VEL {vel}')
+    send_ascii_command('LOOK OFF')
     send_ascii_command('ENDP')
 
 
@@ -448,7 +449,8 @@ def run_moves():
 
 startup()
 for i in range(50):
-    set_el_az(20, 20)
+    set_el_az(5, 5)
     set_el_az(0, 0)
+    print(f'i is {i}')
 
 #need to account for get_elevation/azimuth returning degrees not counts and that the ratios are for 360 degrees

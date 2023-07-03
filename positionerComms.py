@@ -110,7 +110,7 @@ def _cold_start():
     if(d_az < -360):
         d_az = -(-d_az %360)
     
-    return drive_el_az(round(d_el, 2), round(d_az, 2), True)
+    return drive_el_az(round(d_el, 5), round(d_az, 5), True)
 
 def startup():
     global _sock
@@ -142,8 +142,8 @@ def startup():
     switch_to_az_el()
     send_ascii_command('started=1')
     reset()
-    send_ascii_command('DIM MBUF (20)')
-    send_ascii_command('MBUF ON')
+    #send_ascii_command('DIM MBUF (20)')
+    #send_ascii_command('MBUF ON')
 
 
 def reset():
@@ -217,14 +217,14 @@ def reboot():
 def switch_to_az_el():
     global _motors, _centers, _ratios, _pos_alias
     _motors = ['X', 'Y']
-    _centers = [4818320, 34538205]  # experimentally determined
+    _centers = [3029374, 34538205]  # experimentally determined
     _ratios = [189 * 2**19, 765 * 2**19]            
     _pos_alias = ['P12290', 'P12546']
 
 def switch_to_el_az():
     global _motors, _centers, _ratios, _pos_alias
     _motors = ['A', 'Z']
-    _centers = [27347244, 3121654]   # experimentally determined
+    _centers = [27432018, 3121654]   # experimentally determined
     _ratios = [153*2**19, 153*2**19]            
     _pos_alias = ['P13058', 'P12802']
 
@@ -280,31 +280,33 @@ def add_move(move):
     global _move_queue
     _move_queue.append(move)
 
-def program_moves():
+def program_moves():#Should start on the starting position
     global _move_queue
     accel, decel, stp, vel = get_motion_parameters()
     last_el = get_elevation()
     last_az = get_azimuth()
-    send_ascii_command('prog0 clear')
-    send_ascii_command('NEW PROGRAM')
+    send_ascii_command('NEW')
+    #send_ascii_command('DIM MBUF(20)')
+    #send_ascii_command('MBUF ON')
+    send_ascii_command('PROGRAM')    
     try:
         send_ascii_command(f'ACC {accel} DEC {decel} STP 0 VEL {vel}') # a stop acceleration of 0 means the move doesn't stop at the end if there's another move in the buffer 
-        send_ascii_command('LOOK ON')
-        send_ascii_command('LOOK MODE 1')
+        #send_ascii_command('LOOK ON')
+        #send_ascii_command('LOOK MODE 1')
 
         for i, move in enumerate(_move_queue):
-            send_ascii_command(f'{_motors[0]}{move[0]} {_motors[1]}{move[1]}')
+            send_ascii_command(f'{_motors[0]}{round(move[0], 4)} {_motors[1]}{round(move[1], 4)}')
     except Exception as e:
         send_ascii_command('ENDP')
         raise e
     _move_queue = []
     send_ascii_command(f'ACC {accel} DEC {decel} STP {stp} VEL {vel}')
-    send_ascii_command('LOOK OFF')
-    send_ascii_command('ENDP')
+    #_dumb_transmit('LOOK OFF')
+    send_ascii_command('ENDP') 
 
 
 def run_moves():
-    send_ascii_command('run prog0')
+    _dumb_transmit(_sock, 'run prog0')
 
 # def run_moves():
 #     global _move_queue
@@ -352,50 +354,45 @@ def run_moves():
 #     _move_queue = []
 
 
-# def run_moves():
-#     global _move_queue
-#     accel, decel, stp, vel = get_motion_parameters()
-#     def sign(n):
-#         if(n == 0):
-#             return 0
-#         return n / abs(n)
-#     set_el_az(_move_queue[0][0], _move_queue[0][1])\
-    
-#     send_ascii_command(f'jog acc x{accel} y{accel} z{accel} a{accel}')
-#     send_ascii_command(f'jog dec x{decel} y{decel} z{decel} a{decel}')
-#     send_ascii_command(f'jog vel x{vel} y{vel} z{vel} a{vel}')
+def velocity_steer_run():
+    global _move_queue
+    accel, decel, stp, vel = get_motion_parameters()
+    sleep(set_el_az(_move_queue[0][0], _move_queue[0][1]))    
+    send_ascii_command(f'jog acc x{accel} y{accel} z{accel} a{accel}')
+    send_ascii_command(f'jog dec x{decel} y{decel} z{decel} a{decel}')
+    send_ascii_command(f'jog vel x{vel} y{vel} z{vel} a{vel}')
 
-#     for i, move in enumerate(_move_queue[1:len(_move_queue) - 1]): #_move_queue must start with the starting position
-#         i = i + 1
-#         vec = (move[0] - _move_queue[i-1][0], move[1] - _move_queue[i-1][1])
-#         #vec = (move[0] - get_elevation(), move[1] - get_azimuth()) # for whatever reason this doesn't work at all but the previous works ok
-#         mag = sqrt(vec[0]**2 + vec[1]**2)
-#         vec = (vec[0] / mag*vel, vec[1] / mag*vel)
-#         send_ascii_command(f'jog vel {_motors[0]}{abs(round(vec[0], 4))} {_motors[1]}{abs(round(vec[1], 4))}')
-#         #send_ascii_command(f'jog abs {_motors[0]}{move[0]} {_motors[1]}{move[1]}')
-#         send_ascii_command(f'jog {"fwd" if vec[0] > 0 else "rev"} {_motors[0]}')
-#         send_ascii_command(f'jog {"fwd" if vec[1] > 0 else "rev"} {_motors[1]}')
+    for i, move in enumerate(_move_queue[1:len(_move_queue) - 1]): #_move_queue must start with the starting position
+        i = i + 1
+        vec = (move[0] - _move_queue[i-1][0], move[1] - _move_queue[i-1][1])
+        #vec = (move[0] - get_elevation(), move[1] - get_azimuth()) # for whatever reason this doesn't work at all but the previous works ok
+        mag = sqrt(vec[0]**2 + vec[1]**2)
+        vec = (vec[0] / mag*vel, vec[1] / mag*vel)
+        send_ascii_command(f'jog vel {_motors[0]}{abs(round(vec[0], 4))} {_motors[1]}{abs(round(vec[1], 4))}')
+        #send_ascii_command(f'jog abs {_motors[0]}{move[0]} {_motors[1]}{move[1]}')
+        send_ascii_command(f'jog {"fwd" if vec[0] > 0 else "rev"} {_motors[0]}')
+        send_ascii_command(f'jog {"fwd" if vec[1] > 0 else "rev"} {_motors[1]}')
         
-#         next_vec = (_move_queue[i+1][0] - move[0], _move_queue[i+1][1] - move[1])
-#         mag = sqrt(next_vec[0]**2 + next_vec[1]**2)
-#         next_vec = (next_vec[0] / mag * vel, next_vec[1] / mag * vel)
-#         #d_vec = (next_vec[0]**2 - vec[0]**2, next_vec[1]**2 - vec[1]**2)
-#         d_vec = (next_vec[0] - vec[0], next_vec[1] - vec[1])
-#         criterion = max(abs(d_vec[0]), abs(d_vec[1])) > .1
-#         if (abs(vec[0]) > abs(vec[1])):#wanted to use d_vec only but that was running into a vanishing gradient type situation when both were small 
-#             while ((el := get_elevation()) > move[0] - d_vec[0]/2/accel) if vec[0] < 0 else (el := get_elevation()) < move[0] - d_vec[0]/2/accel:
-#                 pass
-#                 #print(f'Waiting until {round(move[0] - d_vec[0]/accel, 2)}el at {el} at {datetime.datetime.now().second} secs at {i}')
-#         else:
-#             while ((az := get_azimuth()) > move[1] - d_vec[1]/2/accel) if vec[1] < 0 else (az := get_azimuth()) < move[1] - d_vec[1]/2/accel:
-#                 pass
-#                 #print(f'Waiting until {round(move[1] - d_vec[1]/accel, 2)}az at {az} at {datetime.datetime.now().second} secs at {i}')
+        next_vec = (_move_queue[i+1][0] - move[0], _move_queue[i+1][1] - move[1])
+        mag = sqrt(next_vec[0]**2 + next_vec[1]**2)
+        next_vec = (next_vec[0] / mag * vel, next_vec[1] / mag * vel)
+        #d_vec = (next_vec[0]**2 - vec[0]**2, next_vec[1]**2 - vec[1]**2)
+        d_vec = (next_vec[0] - vec[0], next_vec[1] - vec[1])
+        criterion = max(abs(d_vec[0]), abs(d_vec[1])) > .1
+        if (abs(vec[0]) > abs(vec[1])):#wanted to use d_vec only but that was running into a vanishing gradient type situation when both were small 
+            while ((el := get_elevation()) > move[0] - d_vec[0]/2/accel) if vec[0] < 0 else (el := get_elevation()) < move[0] - d_vec[0]/2/accel:
+                pass
+                #print(f'Waiting until {round(move[0] - d_vec[0]/accel, 2)}el at {el} at {datetime.datetime.now().second} secs at {i}')
+        else:
+            while ((az := get_azimuth()) > move[1] - d_vec[1]/2/accel) if vec[1] < 0 else (az := get_azimuth()) < move[1] - d_vec[1]/2/accel:
+                pass
+                #print(f'Waiting until {round(move[1] - d_vec[1]/accel, 2)}az at {az} at {datetime.datetime.now().second} secs at {i}')
 
-#     send_ascii_command(f'jog off {_motors[0]} {_motors[1]}')
-#     print((get_elevation(), get_azimuth()))
-#     print(_move_queue[-1])
-#     send_ascii_command(f'jog abs {_motors[0]}{_move_queue[-1][0]} {_motors[1]}{_move_queue[-1][1]}')
-#     _move_queue = []
+    send_ascii_command(f'jog off {_motors[0]} {_motors[1]}')
+    print((get_elevation(), get_azimuth()))
+    print(_move_queue[-1])
+    send_ascii_command(f'jog abs {_motors[0]}{_move_queue[-1][0]} {_motors[1]}{_move_queue[-1][1]}')
+    _move_queue = []
 
 
 
@@ -448,4 +445,14 @@ def run_moves():
 #     return max(abs(get_elevation() / _vel), abs(get_azimuth() / _vel))
 
 startup()
+switch_to_el_az()
+set_motion_parameters(10, 10, 10, 5)
+set_el_az(0, 20)
+for i in range(361):
+    add_move((-20 * sin(i / 360 * 2 * pi), 20 * cos(i / 360 * 2 * pi)))
 
+program_moves()
+
+for i in range(50):
+    run_moves()
+    sleep(35)

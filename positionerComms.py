@@ -139,15 +139,17 @@ def startup():
     #send_ascii_command('PROG0')
 
     sleep(stall)
+    set_angle(0, 0)
     switch_to_az_el()
     send_ascii_command('started=1')
-    reset()
+    set_angle(0, 0)
     #send_ascii_command('DIM MBUF (20)')
     #send_ascii_command('MBUF ON')
 
 
-def reset():
-    send_ascii_command('RES X RES Y RES Z RES A')
+#sets the internal angles to the given ones for the current motors, used to define where any arbitrary angle is 
+def set_angle(el, az):
+    send_ascii_command(f'RES {_motors[0]} {el} RES {_motors[1]} {az}')
 
 
 def bring_to_home():
@@ -444,15 +446,8 @@ def velocity_steer_run():
 #     send_ascii_command(f'jog abs {_motors[0]}0 {_motors[1]}0')
 #     return max(abs(get_elevation() / _vel), abs(get_azimuth() / _vel))
 
-startup()
-switch_to_el_az()
-set_motion_parameters(10, 10, 10, 5)
-set_el_az(0, 20)
-for i in range(361):
-    add_move((-20 * sin(i / 360 * 2 * pi), 20 * cos(i / 360 * 2 * pi)))
+# startup()
+# switch_to_el_az()
+# set_motion_parameters(10, 10, 10, 5)
+# set_el_az(0, 20)
 
-program_moves()
-
-for i in range(50):
-    run_moves()
-    sleep(35)

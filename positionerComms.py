@@ -442,14 +442,14 @@ def velocity_steer_run():
 #     send_ascii_command(f'jog abs {_motors[0]}0 {_motors[1]}0')
 #     return max(abs(get_elevation() / _vel), abs(get_azimuth() / _vel))
 
-startup()
-switch_to_el_az()
-set_motion_parameters(10, 10, 10, 5)
-#sleep(set_el_az(0, -20))
+# startup()
+# switch_to_el_az()
+# set_motion_parameters(10, 10, 10, 5)
+# #sleep(set_el_az(0, -20))
 
-for i in range(301):
-    add_move((-20 * sin(i / 300 * 2 * pi), -20 + 20 * cos(i / 300 * 2 * pi)))
+# for i in range(301):
+#     add_move((-20 * sin(i / 300 * 2 * pi), -20 + 20 * cos(i / 300 * 2 * pi)))
 
-program_moves()
-sleep(.1)
-run_moves()
+# program_moves()
+# sleep(.1)
+# run_moves()

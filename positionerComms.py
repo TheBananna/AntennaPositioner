@@ -226,7 +226,7 @@ def switch_to_az_el():
 def switch_to_el_az():
     global _motors, _centers, _ratios, _pos_alias
     _motors = ['A', 'Z']
-    _centers = [27432018, 3121654]   # experimentally determined
+    _centers = [26068697, 2598727]   # experimentally determined
     _ratios = [153*2**19, 153*2**19]            
     _pos_alias = ['P13058', 'P12802']
 
@@ -267,10 +267,6 @@ def tarc_off():
     send_ascii_command('TARC OFF X Y Z A')
 
 
-#JOG SYSTEM
-import datetime
-import ctypes
-
 _move_queue = []
 _pos_alias = []
 #needs to be a list of tuples each formatted as (x, y, vel_x, vel_y, accel, decel) or (x, y)
@@ -308,7 +304,7 @@ def program_moves():#Should start on the starting position
 
 
 def run_moves():
-    _dumb_transmit(_sock, 'run prog0')
+    send_ascii_command('RUN PROG0')
 
 # def run_moves():
 #     global _move_queue
@@ -446,8 +442,14 @@ def velocity_steer_run():
 #     send_ascii_command(f'jog abs {_motors[0]}0 {_motors[1]}0')
 #     return max(abs(get_elevation() / _vel), abs(get_azimuth() / _vel))
 
-# startup()
-# switch_to_el_az()
-# set_motion_parameters(10, 10, 10, 5)
-# set_el_az(0, 20)
+startup()
+switch_to_el_az()
+set_motion_parameters(10, 10, 10, 5)
+#sleep(set_el_az(0, -20))
 
+for i in range(301):
+    add_move((-20 * sin(i / 300 * 2 * pi), -20 + 20 * cos(i / 300 * 2 * pi)))
+
+program_moves()
+sleep(.1)
+run_moves()

@@ -250,23 +250,6 @@ def circcw(target, center):
     return circumference * (360 - (t1 - t2) % 360) / 360 / _vel
 
 
-#turns on TARC, turning normal moves into spline interpolated ones
-#with this on the current position is the starting point, the next move is the intermediate point, and the last move is the end point
-#after the last move is given the motor will start moving
-#this prevents queued moves from working
-#TARC usage would look like the following
-# tarc_on()
-# set_el_az(45, 23)     Intermediate move, nothing happens yet
-# set_el_az(93, 75)     Final position is aquired and movement begins
-def tarc_on():
-    send_ascii_command('TARC ON X Y Z A')
-
-
-#Turns off TARC and renables normal movement
-def tarc_off():
-    send_ascii_command('TARC OFF X Y Z A')
-
-
 _move_queue = []
 _pos_alias = []
 #needs to be a list of tuples each formatted as (x, y, vel_x, vel_y, accel, decel) or (x, y)

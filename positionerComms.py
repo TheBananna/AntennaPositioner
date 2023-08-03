@@ -205,6 +205,7 @@ def get_motion_parameters():
     return ac, de, st, ve
     
 
+# immediately halts all movement
 def halt():
     send_ascii_command('HALT ALL')
 

@@ -39,7 +39,7 @@ def _transmit(sock, command):
     print(f'Sent: {command}'.replace('\r\n', ''))
     full_response = ''
     while True: # waits for a response from the controller before continuing
-        sleep(.01)
+        #sleep(.01)
         response = sock.recv(1024)
         response = response.decode('ascii')
         full_response += response
@@ -341,7 +341,7 @@ def run_moves():
 # Due to limited max acceleration we need to start turning early, this is determined by the delta to the next movement vector we want to follow
 # The axis with the largest delta is the one used to determine when we should start the next move, once that point is crossed this process repeats with the next point
 # At the end the positioner does an absolute move to the final position, this can't be done for all points as we want to control velocity and jog abs interupts ongoing jogs
-# To improve this you'd want to decouple the x and y coordinates into seperate queues so that you could properly round corners as each axis requires a different "launch point" into the next move
+# To improve this you'd want to decouple the x and y coordinates into seperate queues so that you could properly round corners as each axis requires a different "launch point" into the next move as the velocity deltas will be different
 def velocity_steer_run():
     global _move_queue
     accel, decel, stp, vel = get_motion_parameters()

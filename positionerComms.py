@@ -336,6 +336,12 @@ def run_moves():
 #     _move_queue = []
 
 
+# In case someone wants to know how this works, it does so as follows
+# For each point the vector to the next point is determined and the positioner is steered in that direction
+# Due to limited max acceleration we need to start turning early, this is determined by the delta to the next movement vector we want to follow
+# The axis with the largest delta is the one used to determine when we should start the next move, once that point is crossed this process repeats with the next point
+# At the end the positioner does an absolute move to the final position, this can't be done for all points as we want to control velocity and jog abs interupts ongoing jogs
+# To improve this you'd want to decouple the x and y coordinates into seperate queues so that you could properly round corners as each axis requires a different "launch point" into the next move
 def velocity_steer_run():
     global _move_queue
     accel, decel, stp, vel = get_motion_parameters()
